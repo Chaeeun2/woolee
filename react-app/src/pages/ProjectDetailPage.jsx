@@ -1,4 +1,8 @@
+import { useEffect, useState } from 'react'
 import './ProjectDetailPage.css'
+
+const VIDEO_EXTS = /\.(mp4|webm|mov|ogg)(\?|$)/i
+const isVideo = (src) => VIDEO_EXTS.test(src || '')
 
 function ProjectDetailPage({
   title,
@@ -14,6 +18,16 @@ function ProjectDetailPage({
   sideLinkHref = '#',
   showDescription = true,
 }) {
+  const [mediaReady, setMediaReady] = useState({})
+
+  useEffect(() => {
+    setMediaReady({})
+  }, [items])
+
+  const markMediaReady = (key) => {
+    setMediaReady((prev) => (prev[key] ? prev : { ...prev, [key]: true }))
+  }
+
   const handleNavClick = (event, pageId) => {
     event.preventDefault()
     if (onNavigate) onNavigate(pageId)
@@ -59,20 +73,52 @@ function ProjectDetailPage({
 
       <div className="project-detail-feed">
         {items.map((item, index) => (
-          <article
-            className="project-feed-item feed-entrance"
-            style={{ '--feed-delay': `${180 + index * 70}ms` }}
-            key={`${item.label}-${item.image}`}
-            role="button"
-            tabIndex={0}
-            onClick={() => onOpenContent && onOpenContent(item)}
-            onKeyDown={(event) => handleContentKeyDown(event, item)}
-          >
-            <div className="project-feed-media">
-              <img src={item.image} alt={item.label} />
-              <p>{item.thumbnailCaption ?? item.caption ?? ''}</p>
-            </div>
-          </article>
+          (() => {
+            const itemKey = `${item.label}-${item.image}`
+
+            return (
+              <article
+                className="project-feed-item feed-entrance"
+                style={{ '--feed-delay': `${180 + index * 70}ms` }}
+                key={itemKey}
+                role="button"
+                tabIndex={0}
+                onClick={() => onOpenContent && onOpenContent(item)}
+                onKeyDown={(event) => handleContentKeyDown(event, item)}
+              >
+                <div className="project-feed-media">
+                  {isVideo(item.image) ? (
+                    <video
+                      ref={(node) => {
+                        if (node && node.readyState >= 2) markMediaReady(itemKey)
+                      }}
+                      src={item.image}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
+                      onLoadedData={() => markMediaReady(itemKey)}
+                      onError={() => markMediaReady(itemKey)}
+                    />
+                  ) : (
+                    <img
+                      ref={(node) => {
+                        if (node && node.complete) markMediaReady(itemKey)
+                      }}
+                      src={item.image}
+                      alt={item.label}
+                      onLoad={() => markMediaReady(itemKey)}
+                      onError={() => markMediaReady(itemKey)}
+                    />
+                  )}
+                  <p className={`project-feed-caption ${mediaReady[itemKey] ? 'is-visible' : ''}`.trim()}>
+                    {item.label ?? item.thumbnailCaption ?? item.caption ?? ''}
+                  </p>
+                </div>
+              </article>
+            )
+          })()
         ))}
       </div>
 

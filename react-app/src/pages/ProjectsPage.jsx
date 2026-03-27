@@ -1,11 +1,5 @@
 import './CommonPage.css'
-
-const projectLinks = [
-  { pageId: 'projects-editorial-platforms', label: 'Editorial Platforms', path: '/projects/editorial-platforms' },
-  { pageId: 'projects-cultural-programs', label: 'Cultural Programs', path: '/projects/cultural-programs' },
-  { pageId: 'projects-visual-direction', label: 'Visual Direction', path: '/projects/visual-direction' },
-  { pageId: 'projects-strategic-identity', label: 'Strategic Identity', path: '/projects/strategic-identity' },
-]
+import { PROJECT_DETAIL_NAV } from '../data/projectData'
 
 function ProjectsPage({ onNavigate }) {
   const handleProjectClick = (event, pageId) => {
@@ -38,7 +32,7 @@ function ProjectsPage({ onNavigate }) {
         <div className="editorial-editions anim-fade-up" style={{ '--anim-delay': '320ms' }}>
           <h2>PROJECTS</h2>
           <ul>
-            {projectLinks.map((project) => (
+            {PROJECT_DETAIL_NAV.map((project) => (
               <li key={project.pageId}>
                 <a
                   className="underline"

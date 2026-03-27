@@ -13,6 +13,8 @@ import {
   ALL_DETAIL_ITEMS,
   DETAIL_NAV_BY_SECTION,
   DETAIL_SECTION_BY_PAGE,
+  DETAIL_ROUTE_BY_PAGE,
+  DETAIL_PAGE_BY_ROUTE,
 } from './data/projectData'
 
 const ROUTE_BY_PAGE = {
@@ -20,17 +22,11 @@ const ROUTE_BY_PAGE = {
   common: '/com-m-on',
   qe: '/qe',
   projects: '/projects',
-  'projects-editorial-platforms': '/projects/editorial-platforms',
-  'projects-cultural-programs': '/projects/cultural-programs',
-  'projects-visual-direction': '/projects/visual-direction',
-  'projects-strategic-identity': '/projects/strategic-identity',
-  'common-madboy-mink': '/com-m-on/madboy-mink',
-  'common-beo-issue': '/com-m-on/beo-issue',
-  'common-hwang-soyoon': '/com-m-on/hwang-soyoon',
-  'qe-mar-1-2026': '/qe/mar-1-2026',
-  'conversation-sample': '/conversation/sample',
+  'common-editions': '/com-m-on/editions',
+  'qe-editions': '/qe/editions',
   conversation: '/conversation',
   about: '/about',
+  ...DETAIL_ROUTE_BY_PAGE,
 }
 
 const PAGE_BY_ROUTE = {
@@ -38,22 +34,34 @@ const PAGE_BY_ROUTE = {
   '/com-m-on': 'common',
   '/qe': 'qe',
   '/projects': 'projects',
-  '/projects/editorial-platforms': 'projects-editorial-platforms',
-  '/projects/cultural-programs': 'projects-cultural-programs',
-  '/projects/visual-direction': 'projects-visual-direction',
-  '/projects/strategic-identity': 'projects-strategic-identity',
-  '/com-m-on/madboy-mink': 'common-madboy-mink',
-  '/com-m-on/beo-issue': 'common-beo-issue',
-  '/com-m-on/hwang-soyoon': 'common-hwang-soyoon',
-  '/qe/mar-1-2026': 'qe-mar-1-2026',
-  '/conversation/sample': 'conversation-sample',
+  '/com-m-on/editions': 'common-editions',
+  '/qe/editions': 'qe-editions',
   '/conversation': 'conversation',
   '/comversation': 'conversation',
   '/about': 'about',
+  ...DETAIL_PAGE_BY_ROUTE,
 }
 
 const PROJECT_CONTENT_PATH_PREFIX = '/projects/content/'
 const PROJECTS_BRAND_ARROW = 'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/arrow.png'
+const HOME_CARD_MEDIA = {
+  common: {
+    video: 'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/home-common.mp4',
+    poster: 'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/home-common-poster.jpg',
+  },
+  qe: {
+    video: 'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/home-qe.mp4',
+    poster: 'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/home-qe-poster.jpg',
+  },
+  projects: {
+    video: 'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/home-projects.mp4',
+    poster: 'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/home-projects-poster.jpg',
+  },
+  conversation: {
+    video: 'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/home-conversation.mp4',
+    poster: 'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/home-conversation-poster.jpg',
+  },
+}
 
 const SECTION_SIDE_CONFIG = {
   common: {
@@ -107,6 +115,12 @@ function App() {
     const slug = getContentSlugFromPath(window.location.pathname)
     return getStoredContentBySlug(slug)
   })
+  const [homeVideoReady, setHomeVideoReady] = useState({
+    common: false,
+    qe: false,
+    projects: false,
+    conversation: false,
+  })
   const isAboutPage = activePage === 'about'
   const isCommonPage = activePage === 'common'
   const isQePage = activePage === 'qe'
@@ -156,12 +170,16 @@ function App() {
   const handleOpenProjectContent = (item, sourcePageId) => {
     const sourceItems = ALL_DETAIL_ITEMS[sourcePageId]?.items || []
     const slug = generateRandomSlug()
+    const images = item.detailImages && item.detailImages.length > 0
+      ? item.detailImages
+      : [item.image, ...sourceItems.map((sourceItem) => sourceItem.image)]
     const contentData = {
       slug,
       sourcePageId,
+      category: item.category || '',
       title: item.label,
-      subtitle: item.detailCaption ?? item.caption ?? item.thumbnailCaption ?? '',
-      images: [item.image, ...sourceItems.map((sourceItem) => sourceItem.image)],
+      subtitle: item.detailCaption ?? item.caption ?? item.label ?? '',
+      images,
       description: `${item.label} 아카이브 콘텐츠`,
     }
 
@@ -171,19 +189,27 @@ function App() {
     window.history.pushState({}, '', `${PROJECT_CONTENT_PATH_PREFIX}${slug}`)
   }
 
+  const EDITION_BACK_PAGE = { common: 'common-editions', qe: 'qe-editions' }
+
   /** CommonPage/QePage 에디션 클릭 → ContentDetail로 바로 이동 */
   const handleOpenEditionContent = (pageId) => {
     const detailData = ALL_DETAIL_ITEMS[pageId]
     if (!detailData || !detailData.items || detailData.items.length === 0) return
 
+    const section = DETAIL_SECTION_BY_PAGE[pageId]
+    const sourceId = EDITION_BACK_PAGE[section] || pageId
+
     const firstItem = detailData.items[0]
     const slug = generateRandomSlug()
+    const images = firstItem.detailImages && firstItem.detailImages.length > 0
+      ? firstItem.detailImages
+      : detailData.items.map((i) => i.image)
     const contentData = {
       slug,
-      sourcePageId: pageId,
+      sourcePageId: sourceId,
       title: firstItem.label,
       subtitle: firstItem.detailCaption ?? firstItem.caption ?? firstItem.thumbnailCaption ?? '',
-      images: detailData.items.map((i) => i.image),
+      images,
       description: `${firstItem.label} 아카이브 콘텐츠`,
     }
 
@@ -198,6 +224,10 @@ function App() {
       event.preventDefault()
       handleNavigate(pageId)
     }
+  }
+
+  const markHomeVideoReady = (key) => {
+    setHomeVideoReady((prev) => (prev[key] ? prev : { ...prev, [key]: true }))
   }
 
   return (
@@ -264,8 +294,24 @@ function App() {
               onClick={() => handleNavigate('common')}
               onKeyDown={(event) => handleCardKeyDown(event, 'common')}
             >
-              <video className="card-video is-empty" autoPlay muted loop playsInline preload="none">
-                {<source src="https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/13415877_3840_2160_30fps.mp4" type="video/mp4" />}
+              <img
+                className={`card-poster ${homeVideoReady.common ? 'is-hidden' : ''}`}
+                src={HOME_CARD_MEDIA.common.poster}
+                alt=""
+                aria-hidden="true"
+                fetchPriority="high"
+              />
+              <video
+                className={`card-video is-empty ${homeVideoReady.common ? 'is-ready' : ''}`}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                poster={HOME_CARD_MEDIA.common.poster}
+                onLoadedData={() => markHomeVideoReady('common')}
+              >
+                {<source src={HOME_CARD_MEDIA.common.video} type="video/mp4" />}
               </video>
               <div className="card-overlay" />
               <div className="card-content">
@@ -288,8 +334,24 @@ function App() {
               onClick={() => handleNavigate('qe')}
               onKeyDown={(event) => handleCardKeyDown(event, 'qe')}
             >
-              <video className="card-video is-empty" autoPlay muted loop playsInline preload="none">
-                {<source src="https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/13415877_3840_2160_30fps.mp4" type="video/mp4" />}
+              <img
+                className={`card-poster ${homeVideoReady.qe ? 'is-hidden' : ''}`}
+                src={HOME_CARD_MEDIA.qe.poster}
+                alt=""
+                aria-hidden="true"
+                fetchPriority="high"
+              />
+              <video
+                className={`card-video is-empty ${homeVideoReady.qe ? 'is-ready' : ''}`}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                poster={HOME_CARD_MEDIA.qe.poster}
+                onLoadedData={() => markHomeVideoReady('qe')}
+              >
+                {<source src={HOME_CARD_MEDIA.qe.video} type="video/mp4" />}
               </video>
               <div className="card-overlay" />
               <div className="card-content">
@@ -312,8 +374,24 @@ function App() {
               onClick={() => handleNavigate('projects')}
               onKeyDown={(event) => handleCardKeyDown(event, 'projects')}
             >
-              <video className="card-video is-empty" autoPlay muted loop playsInline preload="none">
-                {<source src="https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/13415877_3840_2160_30fps.mp4" type="video/mp4" />}
+              <img
+                className={`card-poster ${homeVideoReady.projects ? 'is-hidden' : ''}`}
+                src={HOME_CARD_MEDIA.projects.poster}
+                alt=""
+                aria-hidden="true"
+                fetchPriority="high"
+              />
+              <video
+                className={`card-video is-empty ${homeVideoReady.projects ? 'is-ready' : ''}`}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                poster={HOME_CARD_MEDIA.projects.poster}
+                onLoadedData={() => markHomeVideoReady('projects')}
+              >
+                {<source src={HOME_CARD_MEDIA.projects.video} type="video/mp4" />}
               </video>
               <div className="card-overlay" />
               <div className="card-content">
@@ -330,8 +408,24 @@ function App() {
               onClick={() => handleNavigate('conversation')}
               onKeyDown={(event) => handleCardKeyDown(event, 'conversation')}
             >
-              <video className="card-video is-empty" autoPlay muted loop playsInline preload="none">
-                {<source src="https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/13415877_3840_2160_30fps.mp4" type="video/mp4" />}
+              <img
+                className={`card-poster ${homeVideoReady.conversation ? 'is-hidden' : ''}`}
+                src={HOME_CARD_MEDIA.conversation.poster}
+                alt=""
+                aria-hidden="true"
+                fetchPriority="high"
+              />
+              <video
+                className={`card-video is-empty ${homeVideoReady.conversation ? 'is-ready' : ''}`}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                poster={HOME_CARD_MEDIA.conversation.poster}
+                onLoadedData={() => markHomeVideoReady('conversation')}
+              >
+                {<source src={HOME_CARD_MEDIA.conversation.video} type="video/mp4" />}
               </video>
               <div className="card-overlay" />
               <div className="card-content">

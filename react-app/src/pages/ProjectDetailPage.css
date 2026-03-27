@@ -163,7 +163,8 @@
   overflow: visible;
 }
 
-.project-feed-item img {
+.project-feed-item img,
+.project-feed-item video {
   width: auto;
   height: auto;
   max-width: 60vw;
@@ -183,6 +184,15 @@
   line-height: 1.1;
   color: var(--black);
   min-width: 15vw;
+}
+
+.project-feed-caption {
+  opacity: 0;
+  transition: opacity 0.25s ease-in-out;
+}
+
+.project-feed-caption.is-visible {
+  opacity: 1;
 }
 
 .project-detail-description {

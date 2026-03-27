@@ -29,6 +29,7 @@ function ConversationPage({ onNavigate }) {
           </ul>
         </div>
 
+        {/*
         <div className="editorial-editions anim-fade-up" style={{ '--anim-delay': '320ms' }}>
           <h2>CONVERSATIONS</h2>
           <ul>
@@ -39,6 +40,7 @@ function ConversationPage({ onNavigate }) {
             </li>
           </ul>
         </div>
+        */}
       </div>
     </section>
   )
