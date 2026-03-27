@@ -3,7 +3,7 @@
 }
 
 .content-detail-page {
-  min-height: calc(100vh - 50px);
+  min-height: calc(100dvh - 50px);
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -49,7 +49,6 @@
   overflow-x: scroll;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
 }
@@ -90,8 +89,6 @@
   object-fit: cover;
 }
 
-
-
 @media (max-width: 768px) {
   .content-detail-marquee {
     -webkit-overflow-scrolling: auto;
@@ -110,9 +107,9 @@
     line-height: 1.2;
   }
   .content-detail-header {
-    height: 24dvh;
+    height: 28dvh;
   }
   .content-detail-marquee {
-    height: 76dvh;
+    height: 72dvh;
   }
 }

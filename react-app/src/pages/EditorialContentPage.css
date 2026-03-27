@@ -11,7 +11,6 @@
   overflow-x: scroll;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
   overscroll-behavior-x: contain;
   scrollbar-width: none;
 }

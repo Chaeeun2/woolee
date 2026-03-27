@@ -11,6 +11,7 @@ function EditorialContentPage({ content, onNavigate }) {
   const trackRef = useRef(null)
   const setWidth = useRef(0)
   const jumping = useRef(false)
+  const autoScrollPosition = useRef(0)
   const [ready, setReady] = useState(false)
 
   const measure = () => {
@@ -23,6 +24,9 @@ function EditorialContentPage({ content, onNavigate }) {
     const el = marqueeRef.current
     if (el && setWidth.current > 0) {
       el.scrollLeft = setWidth.current
+      autoScrollPosition.current = setWidth.current
+    } else {
+      autoScrollPosition.current = 0
     }
     setReady(true)
   }
@@ -60,23 +64,39 @@ function EditorialContentPage({ content, onNavigate }) {
     const el = marqueeRef.current
     if (!el) return
 
+    const isTouchDevice =
+      window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window
     let rafId
-    const tick = () => {
-      el.scrollLeft += AUTO_SPEED
+    let intervalId
+    const applyAutoScroll = (delta) => {
+      autoScrollPosition.current += delta
+      el.scrollLeft = Math.round(autoScrollPosition.current)
+    }
+
+    if (isTouchDevice) {
+      intervalId = window.setInterval(() => {
+        applyAutoScroll(AUTO_SPEED * 1.5)
+      }, 16)
+    } else {
+      const tick = () => {
+        applyAutoScroll(AUTO_SPEED)
+        rafId = requestAnimationFrame(tick)
+      }
       rafId = requestAnimationFrame(tick)
     }
-    rafId = requestAnimationFrame(tick)
 
     const onWheel = (e) => {
       if (e.deltaY === 0) return
       e.preventDefault()
       el.scrollLeft += e.deltaY * 1.2
+      autoScrollPosition.current = el.scrollLeft
     }
 
     el.addEventListener('wheel', onWheel, { passive: false })
 
     return () => {
-      cancelAnimationFrame(rafId)
+      if (rafId) cancelAnimationFrame(rafId)
+      if (intervalId) window.clearInterval(intervalId)
       el.removeEventListener('wheel', onWheel)
     }
   }, [content, ready])
@@ -91,11 +111,15 @@ function EditorialContentPage({ content, onNavigate }) {
     if (el.scrollLeft >= sw * 2) {
       jumping.current = true
       el.scrollLeft -= sw
+      autoScrollPosition.current = el.scrollLeft
       requestAnimationFrame(() => { jumping.current = false })
     } else if (el.scrollLeft < 1) {
       jumping.current = true
       el.scrollLeft += sw
+      autoScrollPosition.current = el.scrollLeft
       requestAnimationFrame(() => { jumping.current = false })
+    } else {
+      autoScrollPosition.current = el.scrollLeft
     }
   }
 
