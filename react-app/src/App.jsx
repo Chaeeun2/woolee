@@ -15,6 +15,7 @@ import {
   DETAIL_SECTION_BY_PAGE,
   DETAIL_ROUTE_BY_PAGE,
   DETAIL_PAGE_BY_ROUTE,
+  PROJECT_DETAIL_SIDE_SUBCATEGORIES,
 } from './data/projectData'
 
 const ROUTE_BY_PAGE = {
@@ -79,12 +80,114 @@ const SECTION_SIDE_CONFIG = {
 const SECTION_BRAND_LABELS = {
   common: 'COM M ON',
   qe: 'QE',
-  conversation: 'Conversation',
+  conversation: 'Conversations',
   projects: 'Projects',
+}
+
+const EDITION_SOURCE_BY_SECTION = {
+  common: 'common-editions',
+  qe: 'qe-editions',
+}
+
+const slugify = (value) => (
+  String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/['’"]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+)
+
+const getCanonicalContentSourcePageId = (pageId) => {
+  const section = DETAIL_SECTION_BY_PAGE[pageId]
+  return EDITION_SOURCE_BY_SECTION[section] || pageId
+}
+
+const getProjectSubcategoryPath = (pageId, subcategorySlug) => {
+  const basePath = DETAIL_ROUTE_BY_PAGE[pageId] || ROUTE_BY_PAGE[pageId] || '/'
+  return `${basePath}/${subcategorySlug}`
+}
+
+const getProjectSubcategoryMatch = (pathname) => {
+  const normalizedPath = pathname.replace(/\/+$/, '') || '/'
+
+  for (const [pageId, subcategories] of Object.entries(PROJECT_DETAIL_SIDE_SUBCATEGORIES)) {
+    const basePath = DETAIL_ROUTE_BY_PAGE[pageId]
+    if (!basePath || !subcategories.length) continue
+
+    if (normalizedPath === basePath) {
+      return {
+        pageId,
+        subcategorySlug: subcategories[0]?.slug || null,
+      }
+    }
+
+    if (normalizedPath.startsWith(`${basePath}/`)) {
+      const subcategorySlug = normalizedPath.slice(basePath.length + 1)
+      const matchedSubcategory = subcategories.find((subcategory) => subcategory.slug === subcategorySlug)
+
+      return {
+        pageId,
+        subcategorySlug: matchedSubcategory?.slug || subcategories[0]?.slug || null,
+      }
+    }
+  }
+
+  return null
+}
+
+const buildContentIndex = () => {
+  const bySlug = new Map()
+  const slugByItem = new WeakMap()
+
+  Object.keys(DETAIL_ROUTE_BY_PAGE).forEach((pageId) => {
+    const detail = ALL_DETAIL_ITEMS[pageId]
+    const items = detail?.items || []
+
+    items.forEach((item, index) => {
+      const baseSlug = slugify(item.contentId || item.label || `item-${index + 1}`) || `item-${index + 1}`
+      let slug = baseSlug
+
+      if (bySlug.has(slug)) {
+        slug = `${baseSlug}-${slugify(pageId)}-${index + 1}`
+      }
+
+      bySlug.set(slug, {
+        pageId,
+        item,
+        slug,
+      })
+      slugByItem.set(item, slug)
+    })
+  })
+
+  return { bySlug, slugByItem }
+}
+
+const CONTENT_INDEX = buildContentIndex()
+
+const buildContentData = (item, sourcePageId, slug, sourcePath = null) => {
+  const sourceItems = ALL_DETAIL_ITEMS[sourcePageId]?.items || []
+  const images = item.detailImages && item.detailImages.length > 0
+    ? item.detailImages
+    : [item.image, ...sourceItems.map((sourceItem) => sourceItem.image)]
+
+  return {
+    slug,
+    sourcePageId: getCanonicalContentSourcePageId(sourcePageId),
+    sourcePath,
+    category: item.category || '',
+    title: item.label,
+    subtitle: item.detailCaption ?? item.caption ?? item.label ?? '',
+    images,
+    description: `${item.label} 아카이브 콘텐츠`,
+  }
 }
 
 const getPageFromPath = (pathname) => {
   if (pathname.startsWith(PROJECT_CONTENT_PATH_PREFIX)) return 'project-content'
+  const projectSubcategoryMatch = getProjectSubcategoryMatch(pathname)
+  if (projectSubcategoryMatch) return projectSubcategoryMatch.pageId
   return PAGE_BY_ROUTE[pathname] || 'home'
 }
 
@@ -104,16 +207,26 @@ const getStoredContentBySlug = (slug) => {
   }
 }
 
-const generateRandomSlug = () => {
-  const randomPart = Math.random().toString(36).slice(2, 10)
-  return `content-${randomPart}`
+const getContentBySlug = (slug) => {
+  if (!slug) return null
+  const normalizedSlug = slug.startsWith('content-') ? slug.slice('content-'.length) : slug
+  const stored = getStoredContentBySlug(slug) || getStoredContentBySlug(normalizedSlug)
+  if (stored) return stored
+
+  const entry = CONTENT_INDEX.bySlug.get(normalizedSlug)
+  if (!entry) return null
+
+  return buildContentData(entry.item, entry.pageId, entry.slug)
 }
 
 function App() {
   const [activePage, setActivePage] = useState(() => getPageFromPath(window.location.pathname))
+  const [activeDetailSubcategorySlug, setActiveDetailSubcategorySlug] = useState(() => (
+    getProjectSubcategoryMatch(window.location.pathname)?.subcategorySlug || null
+  ))
   const [activeContent, setActiveContent] = useState(() => {
     const slug = getContentSlugFromPath(window.location.pathname)
-    return getStoredContentBySlug(slug)
+    return getContentBySlug(slug)
   })
   const [homeVideoReady, setHomeVideoReady] = useState({
     common: false,
@@ -142,10 +255,12 @@ function App() {
   useEffect(() => {
     const handlePopState = () => {
       const nextPage = getPageFromPath(window.location.pathname)
+      const nextSubcategorySlug = getProjectSubcategoryMatch(window.location.pathname)?.subcategorySlug || null
       setActivePage(nextPage)
+      setActiveDetailSubcategorySlug(nextSubcategorySlug)
       if (nextPage === 'project-content') {
         const slug = getContentSlugFromPath(window.location.pathname)
-        setActiveContent(getStoredContentBySlug(slug))
+        setActiveContent(getContentBySlug(slug))
       } else {
         setActiveContent(null)
       }
@@ -157,9 +272,72 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!isDetailPage) {
+      if (activeDetailSubcategorySlug !== null) {
+        setActiveDetailSubcategorySlug(null)
+      }
+      return
+    }
+
+    const subcategories = PROJECT_DETAIL_SIDE_SUBCATEGORIES[activePage] || []
+    if (!subcategories.length) {
+      if (activeDetailSubcategorySlug !== null) {
+        setActiveDetailSubcategorySlug(null)
+      }
+      return
+    }
+
+    const hasValidSubcategory = subcategories.some((subcategory) => subcategory.slug === activeDetailSubcategorySlug)
+    const fallbackSlug = subcategories[0]?.slug || null
+
+    if (!hasValidSubcategory && fallbackSlug) {
+      setActiveDetailSubcategorySlug(fallbackSlug)
+      const nextPath = getProjectSubcategoryPath(activePage, fallbackSlug)
+      if (window.location.pathname !== nextPath) {
+        window.history.replaceState({}, '', nextPath)
+      }
+    }
+  }, [activePage, activeDetailSubcategorySlug, isDetailPage])
+
   const handleNavigate = (pageId) => {
-    const nextPath = ROUTE_BY_PAGE[pageId] || '/'
+    const subcategories = PROJECT_DETAIL_SIDE_SUBCATEGORIES[pageId] || []
+    const nextSubcategorySlug = subcategories[0]?.slug || null
+    const nextPath = nextSubcategorySlug
+      ? getProjectSubcategoryPath(pageId, nextSubcategorySlug)
+      : ROUTE_BY_PAGE[pageId] || '/'
     setActivePage(pageId)
+    setActiveDetailSubcategorySlug(nextSubcategorySlug)
+    setActiveContent(null)
+
+    if (window.location.pathname !== nextPath) {
+      window.history.pushState({}, '', nextPath)
+    }
+  }
+
+  const handleNavigatePath = (pathname, fallbackPageId = 'home') => {
+    const nextPage = getPageFromPath(pathname)
+    const nextSubcategorySlug = getProjectSubcategoryMatch(pathname)?.subcategorySlug || null
+
+    setActivePage(nextPage || fallbackPageId)
+    setActiveDetailSubcategorySlug(nextSubcategorySlug)
+    setActiveContent(null)
+
+    if (window.location.pathname !== pathname) {
+      window.history.pushState({}, '', pathname)
+    }
+  }
+
+  const handleNavigateProjectSubcategory = (pageId, subcategorySlug) => {
+    const subcategories = PROJECT_DETAIL_SIDE_SUBCATEGORIES[pageId] || []
+    const matchedSubcategory = subcategories.find((subcategory) => subcategory.slug === subcategorySlug)
+    const nextSubcategorySlug = matchedSubcategory?.slug || subcategories[0]?.slug || null
+    const nextPath = nextSubcategorySlug
+      ? getProjectSubcategoryPath(pageId, nextSubcategorySlug)
+      : ROUTE_BY_PAGE[pageId] || '/'
+
+    setActivePage(pageId)
+    setActiveDetailSubcategorySlug(nextSubcategorySlug)
     setActiveContent(null)
 
     if (window.location.pathname !== nextPath) {
@@ -168,20 +346,11 @@ function App() {
   }
 
   const handleOpenProjectContent = (item, sourcePageId) => {
-    const sourceItems = ALL_DETAIL_ITEMS[sourcePageId]?.items || []
-    const slug = generateRandomSlug()
-    const images = item.detailImages && item.detailImages.length > 0
-      ? item.detailImages
-      : [item.image, ...sourceItems.map((sourceItem) => sourceItem.image)]
-    const contentData = {
-      slug,
-      sourcePageId,
-      category: item.category || '',
-      title: item.label,
-      subtitle: item.detailCaption ?? item.caption ?? item.label ?? '',
-      images,
-      description: `${item.label} 아카이브 콘텐츠`,
-    }
+    const slug = CONTENT_INDEX.slugByItem.get(item) || slugify(item.label)
+    const sourcePath = activeDetailSubcategorySlug
+      ? getProjectSubcategoryPath(sourcePageId, activeDetailSubcategorySlug)
+      : (DETAIL_ROUTE_BY_PAGE[sourcePageId] || ROUTE_BY_PAGE[sourcePageId] || null)
+    const contentData = buildContentData(item, sourcePageId, slug, sourcePath)
 
     window.sessionStorage.setItem(`project-content:${slug}`, JSON.stringify(contentData))
     setActiveContent(contentData)
@@ -189,29 +358,14 @@ function App() {
     window.history.pushState({}, '', `${PROJECT_CONTENT_PATH_PREFIX}${slug}`)
   }
 
-  const EDITION_BACK_PAGE = { common: 'common-editions', qe: 'qe-editions' }
-
   /** CommonPage/QePage 에디션 클릭 → ContentDetail로 바로 이동 */
   const handleOpenEditionContent = (pageId) => {
     const detailData = ALL_DETAIL_ITEMS[pageId]
     if (!detailData || !detailData.items || detailData.items.length === 0) return
 
-    const section = DETAIL_SECTION_BY_PAGE[pageId]
-    const sourceId = EDITION_BACK_PAGE[section] || pageId
-
     const firstItem = detailData.items[0]
-    const slug = generateRandomSlug()
-    const images = firstItem.detailImages && firstItem.detailImages.length > 0
-      ? firstItem.detailImages
-      : detailData.items.map((i) => i.image)
-    const contentData = {
-      slug,
-      sourcePageId: sourceId,
-      title: firstItem.label,
-      subtitle: firstItem.detailCaption ?? firstItem.caption ?? firstItem.thumbnailCaption ?? '',
-      images,
-      description: `${firstItem.label} 아카이브 콘텐츠`,
-    }
+    const slug = CONTENT_INDEX.slugByItem.get(firstItem) || slugify(firstItem.label)
+    const contentData = buildContentData(firstItem, pageId, slug)
 
     window.sessionStorage.setItem(`project-content:${slug}`, JSON.stringify(contentData))
     setActiveContent(contentData)
@@ -235,11 +389,13 @@ function App() {
       <Header
         activePage={headerActivePage}
         onNavigate={handleNavigate}
+        onNavigatePath={handleNavigatePath}
         brandLabel={isProjectContentPage ? (SECTION_BRAND_LABELS[contentSourceSection] || 'Projects') : 'WOO LEE'}
         brandIconSrc={isProjectContentPage ? PROJECTS_BRAND_ARROW : null}
         brandTargetPage={
           isProjectContentPage ? activeContent?.sourcePageId || 'projects' : 'home'
         }
+        brandTargetPath={isProjectContentPage ? activeContent?.sourcePath || null : null}
         brandClassName={isProjectContentPage ? 'brand-projects' : ''}
       />
 
@@ -257,8 +413,11 @@ function App() {
           description={ALL_DETAIL_ITEMS[activePage].description}
           items={ALL_DETAIL_ITEMS[activePage].items}
           navItems={DETAIL_NAV_BY_SECTION[detailSection] || []}
+          sideSubcategories={PROJECT_DETAIL_SIDE_SUBCATEGORIES[activePage] || []}
+          activeSubcategorySlug={activeDetailSubcategorySlug}
           activePageId={activePage}
           onNavigate={handleNavigate}
+          onNavigateSubcategory={handleNavigateProjectSubcategory}
           onOpenContent={(item) => handleOpenProjectContent(item, activePage)}
           sideMenuMode={SECTION_SIDE_CONFIG[detailSection] ? 'logo-link' : 'list'}
           sideLogoSrc={SECTION_SIDE_CONFIG[detailSection]?.sideLogoSrc || ''}
@@ -430,7 +589,7 @@ function App() {
               <div className="card-overlay" />
               <div className="card-content">
                 <h2 className="anim-fade-up" style={{ '--anim-delay': '670ms' }}>
-                  Conversation
+                  Conversations
                 </h2>
               </div>
             </article>

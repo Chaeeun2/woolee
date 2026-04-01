@@ -6,16 +6,18 @@ const menuItems = [
   { id: 'common', label: 'COM M ON', path: '/com-m-on' },
   { id: 'qe', label: 'QE', path: '/qe' },
   { id: 'projects', label: 'PROJECTS', path: '/projects' },
-  { id: 'conversation', label: 'CONVERSATION', path: '/conversation' },
+  { id: 'conversation', label: 'CONVERSATIONS', path: '/conversation' },
   { id: 'about', label: 'ABOUT', path: '/about' },
 ]
 
 function Header({
   activePage = 'home',
   onNavigate,
+  onNavigatePath,
   brandLabel = 'WOO LEE',
   brandIconSrc = null,
   brandTargetPage = 'home',
+  brandTargetPath = null,
   brandClassName = '',
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -40,6 +42,16 @@ function Header({
     if (onNavigate) onNavigate(pageId)
   }
 
+  const handleBrandClick = (event) => {
+    event.preventDefault()
+    closeMenu()
+    if (brandTargetPath && onNavigatePath) {
+      onNavigatePath(brandTargetPath, brandTargetPage)
+      return
+    }
+    if (onNavigate) onNavigate(brandTargetPage)
+  }
+
   const handleToggle = () => {
     if (mobileOpen) {
       closeMenu()
@@ -53,9 +65,9 @@ function Header({
   return (
     <header className={`top-header anim-fade-down ${mobileOpen ? 'mobile-open' : ''} ${closing ? 'mobile-closing' : ''}`}>
       <a
-        href="/"
+        href={brandTargetPath || '/'}
         className={`brand-left ${brandClassName}`.trim()}
-        onClick={(event) => handleMenuClick(event, brandTargetPage)}
+        onClick={handleBrandClick}
       >
         {brandIconSrc ? (
           <img className="brand-icon" src={brandIconSrc} alt="" aria-hidden="true" />

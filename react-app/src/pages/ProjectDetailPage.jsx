@@ -9,8 +9,11 @@ function ProjectDetailPage({
   description,
   items,
   navItems,
+  sideSubcategories = [],
+  activeSubcategorySlug = null,
   activePageId,
   onNavigate,
+  onNavigateSubcategory,
   onOpenContent,
   sideMenuMode = 'list',
   sideLogoSrc = '',
@@ -40,6 +43,20 @@ function ProjectDetailPage({
     }
   }
 
+  const handleSubcategoryClick = (event, subcategorySlug) => {
+    event.preventDefault()
+    if (onNavigateSubcategory) onNavigateSubcategory(activePageId, subcategorySlug)
+  }
+
+  const filteredItems = activeSubcategorySlug
+    ? items.filter((item) => {
+        const activeSubcategory = sideSubcategories.find((subcategory) => subcategory.slug === activeSubcategorySlug)
+        if (!activeSubcategory) return true
+        if (!activeSubcategory.itemLabels || activeSubcategory.itemLabels.length === 0) return true
+        return activeSubcategory.itemLabels.includes(item.label)
+      })
+    : items
+
   return (
     <section className="project-detail-page" aria-label={title}>
       <div className="project-detail-side anim-fade-right" style={{ '--anim-delay': '150ms' }}>
@@ -64,6 +81,20 @@ function ProjectDetailPage({
                   <a href={item.path} onClick={(event) => handleNavClick(event, item.pageId)}>
                     {item.label}
                   </a>
+                  {item.pageId === activePageId && sideSubcategories.length > 0 ? (
+                    <ul className="project-side-subcategories">
+                      {sideSubcategories.map((subcategory) => (
+                        <li
+                          key={subcategory.slug}
+                          className={`project-side-subcategory ${activeSubcategorySlug === subcategory.slug ? 'is-active' : ''}`.trim()}
+                        >
+                          <a href={`${item.path}/${subcategory.slug}`} onClick={(event) => handleSubcategoryClick(event, subcategory.slug)}>
+                            {subcategory.label}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -72,7 +103,7 @@ function ProjectDetailPage({
       </div>
 
       <div className="project-detail-feed">
-        {items.map((item, index) => (
+        {filteredItems.map((item, index) => (
           (() => {
             const itemKey = `${item.label}-${item.image}`
 

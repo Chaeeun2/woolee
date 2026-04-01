@@ -4,7 +4,7 @@ import './ContentDetailPage.css'
 const VIDEO_EXTS = /\.(mp4|webm|mov|ogg)(\?|$)/i
 const isVideo = (src) => VIDEO_EXTS.test(src || '')
 
-const AUTO_SPEED = 0.5
+const AUTO_SPEED = 0.1
 
 function ContentDetailPage({ content, onNavigate }) {
   const marqueeRef = useRef(null)
@@ -12,6 +12,8 @@ function ContentDetailPage({ content, onNavigate }) {
   const setWidth = useRef(0)
   const jumping = useRef(false)
   const autoScrollPosition = useRef(0)
+  const initialized = useRef(false)
+  const hasManualInteraction = useRef(false)
   const [ready, setReady] = useState(false)
 
   const measure = () => {
@@ -19,40 +21,91 @@ function ContentDetailPage({ content, onNavigate }) {
     setWidth.current = trackRef.current.scrollWidth / 3
   }
 
-  const handleAllLoaded = () => {
+  const syncLayout = (resetToCenter = false) => {
+    const previousSetWidth = setWidth.current
     measure()
     const el = marqueeRef.current
     if (el && setWidth.current > 0) {
-      el.scrollLeft = setWidth.current
-      autoScrollPosition.current = setWidth.current
-    } else {
-      autoScrollPosition.current = 0
+      if (resetToCenter || !initialized.current) {
+        el.scrollLeft = setWidth.current
+        autoScrollPosition.current = setWidth.current
+        initialized.current = true
+      } else if (!hasManualInteraction.current) {
+        const offsetFromStart = Math.max(0, autoScrollPosition.current - previousSetWidth)
+        const nextPosition = setWidth.current + offsetFromStart
+        el.scrollLeft = nextPosition
+        autoScrollPosition.current = nextPosition
+      } else {
+        autoScrollPosition.current = el.scrollLeft
+      }
     }
-    setReady(true)
   }
 
   useEffect(() => {
     setReady(false)
+    initialized.current = false
+    hasManualInteraction.current = false
     const track = trackRef.current
     if (!track) return
 
-    const mediaEls = track.querySelectorAll('img, video')
-    if (mediaEls.length === 0) { handleAllLoaded(); return }
+    const isScrollable = (content?.images?.length || 0) > 1
+    requestAnimationFrame(() => {
+      syncLayout(isScrollable)
+      setReady(true)
+    })
 
-    let loaded = 0
-    const total = mediaEls.length
-    const check = () => { loaded++; if (loaded >= total) handleAllLoaded() }
+    const mediaEls = track.querySelectorAll('img, video')
+    if (mediaEls.length === 0) return
+    const videoEls = Array.from(mediaEls).filter((el) => el.tagName === 'VIDEO')
+    const hasMultipleVideos = videoEls.length > 1
+
+    if (hasMultipleVideos) {
+      let loadedCount = 0
+      const totalCount = mediaEls.length
+      const handleFinalReady = () => {
+        loadedCount += 1
+        if (loadedCount >= totalCount) {
+          syncLayout(false)
+        }
+      }
+
+      mediaEls.forEach((el) => {
+        if (el.tagName === 'IMG') {
+          if (el.complete) {
+            handleFinalReady()
+          } else {
+            el.addEventListener('load', handleFinalReady, { once: true })
+            el.addEventListener('error', handleFinalReady, { once: true })
+          }
+        } else if (el.readyState >= 1) {
+          handleFinalReady()
+        } else {
+          el.addEventListener('loadedmetadata', handleFinalReady, { once: true })
+          el.addEventListener('error', handleFinalReady, { once: true })
+        }
+      })
+
+      return
+    }
 
     mediaEls.forEach((el) => {
+      const handleReady = () => {
+        syncLayout(false)
+      }
+
       if (el.tagName === 'IMG') {
-        if (el.complete) { check() } else {
-          el.addEventListener('load', check, { once: true })
-          el.addEventListener('error', check, { once: true })
+        if (el.complete) {
+          handleReady()
+        } else {
+          el.addEventListener('load', handleReady, { once: true })
+          el.addEventListener('error', handleReady, { once: true })
         }
       } else {
-        if (el.readyState >= 1) { check() } else {
-          el.addEventListener('loadedmetadata', check, { once: true })
-          el.addEventListener('error', check, { once: true })
+        if (el.readyState >= 1) {
+          handleReady()
+        } else {
+          el.addEventListener('loadedmetadata', handleReady, { once: true })
+          el.addEventListener('error', handleReady, { once: true })
         }
       }
     })
@@ -88,16 +141,25 @@ function ContentDetailPage({ content, onNavigate }) {
     const onWheel = (e) => {
       if (e.deltaY === 0) return
       e.preventDefault()
+      hasManualInteraction.current = true
       el.scrollLeft += e.deltaY * 1.2
       autoScrollPosition.current = el.scrollLeft
     }
 
+    const markManualInteraction = () => {
+      hasManualInteraction.current = true
+    }
+
     el.addEventListener('wheel', onWheel, { passive: false })
+    el.addEventListener('pointerdown', markManualInteraction)
+    el.addEventListener('touchstart', markManualInteraction, { passive: true })
 
     return () => {
       if (rafId) cancelAnimationFrame(rafId)
       if (intervalId) window.clearInterval(intervalId)
       el.removeEventListener('wheel', onWheel)
+      el.removeEventListener('pointerdown', markManualInteraction)
+      el.removeEventListener('touchstart', markManualInteraction)
     }
   }, [content, ready])
 

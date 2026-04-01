@@ -40,7 +40,7 @@ function CommonPage({ onNavigate, onOpenEdition }) {
         </div>
 
         <div className="editorial-editions anim-fade-up" style={{ '--anim-delay': '320ms' }}>
-          <h2>EDITIONS</h2>
+          <h2>ISSUES</h2>
           <ul>
             {commonLinks.map((link) => (
               <li key={link.pageId}>

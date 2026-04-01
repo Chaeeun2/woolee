@@ -24,9 +24,6 @@ function ProjectsPage({ onNavigate }) {
             <li>Assemble and lead specialised teams</li>
             <li>Take full responsibility for outcomes</li>
           </ul>
-          <p>
-            Rooted in <em>musicians</em> and <em>fashion</em> as cultural language.
-          </p>
         </div>
 
         <div className="editorial-editions anim-fade-up" style={{ '--anim-delay': '320ms' }}>

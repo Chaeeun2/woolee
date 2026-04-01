@@ -7,15 +7,15 @@ function ConversationPage({ onNavigate }) {
   }
 
   return (
-    <section className="editorial-page" aria-label="Conversation">
+    <section className="editorial-page" aria-label="Conversations">
       <div className="editorial-mark anim-fade-up" style={{ '--anim-delay': '120ms' }}>
-        <h1 className="editorial-mark-title">Conversation</h1>
+        <h1 className="editorial-mark-title">Conversations</h1>
       </div>
 
       <div className="editorial-content">
         <div className="editorial-intro anim-fade-up" style={{ '--anim-delay': '220ms' }}>
           <p>
-            <em>Conversation</em> bring ideas into the public sphere — through lectures, interviews, and dialogue.
+            <em>Conversations</em> bring ideas into the public sphere — through lectures, interviews, and dialogue.
           </p>
           <br/><p>
             A space where cultural, creative, and technological questions are explored in exchange with audiences, institutions, and media.
@@ -29,7 +29,6 @@ function ConversationPage({ onNavigate }) {
           </ul>
         </div>
 
-        {/*
         <div className="editorial-editions anim-fade-up" style={{ '--anim-delay': '320ms' }}>
           <h2>CONVERSATIONS</h2>
           <ul>
@@ -40,7 +39,6 @@ function ConversationPage({ onNavigate }) {
             </li>
           </ul>
         </div>
-        */}
       </div>
     </section>
   )
