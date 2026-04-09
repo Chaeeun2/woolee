@@ -84,6 +84,20 @@
 }
 
 @media (max-width: 768px) {
+  .conversation-hover-preview--cursor {
+    display: none !important;
+  }
+
+  .conversation-hover-preview--anchor {
+    max-width: min(210px, calc(100vw - 24px));
+    max-height: min(210px, 34vh);
+  }
+
+  .conversation-hover-preview--anchor img {
+    max-width: min(210px, calc(100vw - 24px));
+    max-height: min(210px, 34vh);
+  }
+
   .conversation-list-page {
     padding: 60px 20px 24px;
   }
@@ -98,10 +112,6 @@
 
   .conversation-list a {
     font-size: 18px;
-  }
-
-  .conversation-hover-preview {
-    display: none;
   }
 
   .conversation-list-arrow {
