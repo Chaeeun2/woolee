@@ -47,68 +47,68 @@ function EditorialContentPage({ content, onNavigate }) {
     hasManualInteraction.current = false
     const track = trackRef.current
     if (!track) return
+    let cancelled = false
+    const cleanupFns = []
 
     const isScrollable = (content?.images?.length || 0) > 1
     requestAnimationFrame(() => {
+      if (cancelled) return
       syncLayout(isScrollable)
       setReady(true)
     })
 
-    const mediaEls = track.querySelectorAll('img, video')
-    if (mediaEls.length === 0) return
-    const videoEls = Array.from(mediaEls).filter((el) => el.tagName === 'VIDEO')
-    const hasMultipleVideos = videoEls.length > 1
+    const imageEls = Array.from(track.querySelectorAll('img'))
+    const videoEls = Array.from(track.querySelectorAll('video'))
 
-    if (hasMultipleVideos) {
-      let loadedCount = 0
-      const totalCount = mediaEls.length
-      const handleFinalReady = () => {
-        loadedCount += 1
-        if (loadedCount >= totalCount) {
-          syncLayout(false)
-        }
-      }
-
-      mediaEls.forEach((el) => {
-        if (el.tagName === 'IMG') {
-          if (el.complete) {
-            handleFinalReady()
-          } else {
-            el.addEventListener('load', handleFinalReady, { once: true })
-            el.addEventListener('error', handleFinalReady, { once: true })
+    const waitForAllImages = imageEls.length === 0
+      ? Promise.resolve()
+      : Promise.all(imageEls.map((img) => new Promise((resolve) => {
+          if (img.complete) {
+            resolve()
+            return
           }
-        } else if (el.readyState >= 1) {
-          handleFinalReady()
-        } else {
-          el.addEventListener('loadedmetadata', handleFinalReady, { once: true })
-          el.addEventListener('error', handleFinalReady, { once: true })
-        }
+
+          const handleDone = () => resolve()
+          img.addEventListener('load', handleDone, { once: true })
+          img.addEventListener('error', handleDone, { once: true })
+          cleanupFns.push(() => {
+            img.removeEventListener('load', handleDone)
+            img.removeEventListener('error', handleDone)
+          })
+        })))
+
+    const waitForAllVideos = videoEls.length === 0
+      ? Promise.resolve()
+      : Promise.all(videoEls.map((video) => new Promise((resolve) => {
+          if (video.readyState >= 1) {
+            resolve()
+            return
+          }
+
+          const handleDone = () => resolve()
+          video.addEventListener('loadedmetadata', handleDone, { once: true })
+          video.addEventListener('error', handleDone, { once: true })
+          cleanupFns.push(() => {
+            video.removeEventListener('loadedmetadata', handleDone)
+            video.removeEventListener('error', handleDone)
+          })
+        })))
+
+    waitForAllImages
+      .then(() => {
+        if (cancelled) return
+        syncLayout(false)
+        return waitForAllVideos
+      })
+      .then(() => {
+        if (cancelled) return
+        syncLayout(false)
       })
 
-      return
+    return () => {
+      cancelled = true
+      cleanupFns.forEach((cleanup) => cleanup())
     }
-
-    mediaEls.forEach((el) => {
-      const handleReady = () => {
-        syncLayout(false)
-      }
-
-      if (el.tagName === 'IMG') {
-        if (el.complete) {
-          handleReady()
-        } else {
-          el.addEventListener('load', handleReady, { once: true })
-          el.addEventListener('error', handleReady, { once: true })
-        }
-      } else {
-        if (el.readyState >= 1) {
-          handleReady()
-        } else {
-          el.addEventListener('loadedmetadata', handleReady, { once: true })
-          el.addEventListener('error', handleReady, { once: true })
-        }
-      }
-    })
   }, [content])
 
   useEffect(() => {

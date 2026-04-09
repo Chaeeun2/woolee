@@ -42,7 +42,7 @@ function AboutPage() {
       </div>
 
       <footer className="about-footer anim-fade-up" style={{ '--anim-delay': '420ms' }}>
-        <a class="underline" href="mailto:woolee33@gmail.com">woolee33@gmail.com</a>
+        <a class="underline" href="mailto:info@woo-lee.com">info@woo-lee.com</a>
         <a className="underline" href="https://www.instagram.com/woolee_style/" target="_blank" rel="noreferrer">
           Follow on Instagram
         </a>

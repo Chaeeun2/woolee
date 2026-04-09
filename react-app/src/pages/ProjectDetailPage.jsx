@@ -144,7 +144,7 @@ function ProjectDetailPage({
                     />
                   )}
                   <p className={`project-feed-caption ${mediaReady[itemKey] ? 'is-visible' : ''}`.trim()}>
-                    {item.label ?? item.thumbnailCaption ?? item.caption ?? ''}
+                    {item.label ?? item.caption ?? ''}
                   </p>
                 </div>
               </article>

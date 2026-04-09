@@ -6,6 +6,7 @@ import CommonPage from './pages/CommonPage'
 import QePage from './pages/QePage'
 import ProjectsPage from './pages/ProjectsPage'
 import ConversationPage from './pages/ConversationPage'
+import ConversationListPage from './pages/ConversationListPage'
 import ProjectDetailPage from './pages/ProjectDetailPage'
 import ContentDetailPage from './pages/ContentDetailPage'
 import EditorialContentPage from './pages/EditorialContentPage'
@@ -26,6 +27,7 @@ const ROUTE_BY_PAGE = {
   'common-editions': '/com-m-on/editions',
   'qe-editions': '/qe/editions',
   conversation: '/conversation',
+  'conversation-contents': '/conversation/contents',
   about: '/about',
   ...DETAIL_ROUTE_BY_PAGE,
 }
@@ -38,6 +40,7 @@ const PAGE_BY_ROUTE = {
   '/com-m-on/editions': 'common-editions',
   '/qe/editions': 'qe-editions',
   '/conversation': 'conversation',
+  '/conversation/contents': 'conversation-contents',
   '/comversation': 'conversation',
   '/about': 'about',
   ...DETAIL_PAGE_BY_ROUTE,
@@ -239,6 +242,7 @@ function App() {
   const isQePage = activePage === 'qe'
   const isProjectsPage = activePage === 'projects'
   const isConversationPage = activePage === 'conversation'
+  const isConversationListPage = activePage === 'conversation-contents'
   const isDetailPage = Object.prototype.hasOwnProperty.call(ALL_DETAIL_ITEMS, activePage)
   const isProjectContentPage = activePage === 'project-content'
   const detailSection = DETAIL_SECTION_BY_PAGE[activePage]
@@ -250,6 +254,8 @@ function App() {
       ? detailSection || 'projects'
       : isProjectContentPage
         ? contentSourceSection || 'projects'
+        : isConversationListPage
+          ? 'conversation'
         : activePage
 
   useEffect(() => {
@@ -358,10 +364,20 @@ function App() {
     window.history.pushState({}, '', `${PROJECT_CONTENT_PATH_PREFIX}${slug}`)
   }
 
-  /** CommonPage/QePage 에디션 클릭 → ContentDetail로 바로 이동 */
+  const handleOpenConversationContent = (item, sourcePageId) => {
+    const slug = CONTENT_INDEX.slugByItem.get(item) || slugify(item.label)
+    const contentData = buildContentData(item, sourcePageId, slug, ROUTE_BY_PAGE['conversation-contents'])
+
+    window.sessionStorage.setItem(`project-content:${slug}`, JSON.stringify(contentData))
+    setActiveContent(contentData)
+    setActivePage('project-content')
+    window.history.pushState({}, '', `${PROJECT_CONTENT_PATH_PREFIX}${slug}`)
+  }
+
+  /** Common/QE/Conversation 목록 클릭 → ContentDetail로 바로 이동 */
   const handleOpenEditionContent = (pageId) => {
     const detailData = ALL_DETAIL_ITEMS[pageId]
-    if (!detailData || !detailData.items || detailData.items.length === 0) return
+    if (!detailData || !detailData.items || detailData.items.length === 0) return false
 
     const firstItem = detailData.items[0]
     const slug = CONTENT_INDEX.slugByItem.get(firstItem) || slugify(firstItem.label)
@@ -371,6 +387,7 @@ function App() {
     setActiveContent(contentData)
     setActivePage('project-content')
     window.history.pushState({}, '', `${PROJECT_CONTENT_PATH_PREFIX}${slug}`)
+    return true
   }
 
   const handleCardKeyDown = (event, pageId) => {
@@ -425,12 +442,18 @@ function App() {
           sideLinkHref={SECTION_SIDE_CONFIG[detailSection]?.sideLinkHref || '#'}
           showDescription={!SECTION_SIDE_CONFIG[detailSection]}
         />
-      ) : isProjectContentPage && (contentSourceSection === 'common' || contentSourceSection === 'qe') ? (
+      ) : isProjectContentPage && (
+        contentSourceSection === 'common'
+        || contentSourceSection === 'qe'
+        || contentSourceSection === 'conversation'
+      ) ? (
         <EditorialContentPage content={activeContent} onNavigate={handleNavigate} />
       ) : isProjectContentPage ? (
         <ContentDetailPage content={activeContent} onNavigate={handleNavigate} />
+      ) : isConversationListPage ? (
+        <ConversationListPage onOpenContent={handleOpenConversationContent} />
       ) : isConversationPage ? (
-        <ConversationPage onNavigate={handleNavigate} />
+        <ConversationPage onOpenContent={handleOpenConversationContent} onNavigate={handleNavigate} />
       ) : (
         <>
           <section className="hero-section" aria-label="Intro">
