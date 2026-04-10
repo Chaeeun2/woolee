@@ -755,7 +755,6 @@ export const PROJECT_DETAIL_ITEMS = {
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/projects/ACREDO/11.jpg',
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/projects/ACREDO/13.jpg',
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/projects/ACREDO/14.mp4',
-          'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/projects/ACREDO/15.jpg',
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/projects/ACREDO/16.jpg',
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/projects/ACREDO/17.jpg',
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/projects/ACREDO/18.jpg',
