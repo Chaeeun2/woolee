@@ -31,11 +31,16 @@
   padding: 0;
 }
 
+.project-detail-side ul {
+  margin-top: 5px;
+}
+
 .project-detail-side li {
   font-size: 18px;
-  line-height: 1.45;
+  line-height: 1.2;
   position: relative;
   padding-left: 12px;
+  margin-bottom: 5px;
 }
 
 .project-detail-side a {
@@ -283,6 +288,10 @@
   }
 }
 
+.mobile-br {
+  display: none;
+}
+
 @media (max-width: 1080px) {
   .project-detail-side h1 {
     font-size: 60px;
@@ -325,7 +334,7 @@
   .project-detail-side {
     top: 60px;
     left: 20px;
-    width: 175px;
+    width: 220px;
   }
   .project-detail-description {
     left: 20px;
@@ -359,5 +368,8 @@
   }
   .project-side-link-row img {
     width: 8px;
+  }
+  .mobile-br {
+    display: block;
   }
 }

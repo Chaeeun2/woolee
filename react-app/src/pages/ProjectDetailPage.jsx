@@ -89,7 +89,14 @@ function ProjectDetailPage({
                           className={`project-side-subcategory ${activeSubcategorySlug === subcategory.slug ? 'is-active' : ''}`.trim()}
                         >
                           <a href={`${item.path}/${subcategory.slug}`} onClick={(event) => handleSubcategoryClick(event, subcategory.slug)}>
-                            {subcategory.label}
+                            {subcategory.label.includes('_') ? (
+                              subcategory.label.split('_').map((part, partIndex) => (
+                                <span key={partIndex}>
+                                  {partIndex > 0 ? <><br className="mobile-br" />{'_'}</> : null}
+                                  {part}
+                                </span>
+                              ))
+                            ) : subcategory.label}
                           </a>
                         </li>
                       ))}

@@ -14,6 +14,11 @@ function CommonPage({ onNavigate, onOpenEdition }) {
     if (onNavigate) onNavigate(pageId)
   }
 
+  const handleMoreClick = (event) => {
+    event.preventDefault()
+    if (onNavigate) onNavigate('common-editions')
+  }
+
   return (
     <section className="editorial-page" aria-label="COM M ON">
       <div className="editorial-mark anim-fade-up" style={{ '--anim-delay': '120ms' }}>
@@ -54,6 +59,11 @@ function CommonPage({ onNavigate, onOpenEdition }) {
               </li>
             ))}
           </ul>
+          <p className="editorial-more-link">
+            <a className="underline" href="/com-m-on/issues" onClick={handleMoreClick}>
+              More...
+            </a>
+          </p>
         </div>
       </div>
     </section>
