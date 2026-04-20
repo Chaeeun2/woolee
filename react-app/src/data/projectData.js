@@ -922,6 +922,7 @@ export const PROJECT_DETAIL_ITEMS = {
               detailCaption: `BLAUER`,
         detailImages: [
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/projects/BLAUER/01.mp4', 
+          'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/projects/BLAUER/02.mp4', 
         ],
         },
          {
