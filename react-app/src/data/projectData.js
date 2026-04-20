@@ -1186,7 +1186,6 @@ export const QE_DETAIL_ITEMS = {
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/qe/07.jpg',
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/qe/08.jpg',
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/qe/09.jpg',
-          'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/qe/10.jpg',
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/qe/11.jpg',
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/qe/12.mp4',
           'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/qe/14.jpg',
