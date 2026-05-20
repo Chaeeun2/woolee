@@ -1,0 +1,40 @@
+.about-admin-page textarea {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #000;
+  font: inherit;
+  font-size: 16px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.about-admin-body {
+  min-height: 300px;
+}
+
+.about-admin-page textarea:focus {
+  outline: 2px solid #111;
+  outline-offset: 1px;
+}
+
+.about-admin-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.about-admin-link {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #ececec;
+  border-radius: 12px;
+  background: #f2f2f2;
+}
+
+@media (max-width: 900px) {
+  .about-admin-links {
+    grid-template-columns: 1fr;
+  }
+}

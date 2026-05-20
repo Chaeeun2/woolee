@@ -1,10 +1,47 @@
 import './CommonPage.css'
-import { QE_DETAIL_NAV } from '../data/projectData'
+import { DEFAULT_QE_PAGE_SETTINGS, getQeDetailNav } from '../admin/qePageSettings'
 
 const MAX_EDITIONS = 3
-const qeLinks = QE_DETAIL_NAV.slice(0, MAX_EDITIONS)
 
-function QePage({ onNavigate, onOpenEdition }) {
+const renderRichText = (text) => (
+  String(text || '').split(/(\*[^*]+\*)/g).map((part, index) => {
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={`${part}-${index}`}>{part.slice(1, -1)}</em>
+    }
+
+    return part
+  })
+)
+
+const parseIntroBlocks = (body) => {
+  const blocks = []
+
+  String(body || '').split(/\r?\n/).forEach((line) => {
+    const trimmedLine = line.trim()
+    if (!trimmedLine) return
+
+    const listMatch = trimmedLine.match(/^--\s*(.+)$/)
+    if (listMatch) {
+      const lastBlock = blocks[blocks.length - 1]
+      if (lastBlock?.type === 'list') {
+        lastBlock.items.push(listMatch[1])
+        return
+      }
+
+      blocks.push({ type: 'list', items: [listMatch[1]] })
+      return
+    }
+
+    blocks.push({ type: 'paragraph', text: line })
+  })
+
+  return blocks
+}
+
+function QePage({ settings = DEFAULT_QE_PAGE_SETTINGS, onNavigate, onOpenEdition }) {
+  const qeLinks = getQeDetailNav(settings).slice(0, MAX_EDITIONS)
+  const introBlocks = parseIntroBlocks(settings.intro.body)
+
   const handleLinkClick = (event, pageId) => {
     event.preventDefault()
     if (onOpenEdition) {
@@ -22,20 +59,28 @@ function QePage({ onNavigate, onOpenEdition }) {
   return (
     <section className="editorial-page" aria-label="QE">
       <div className="editorial-mark anim-fade-up" style={{ '--anim-delay': '120ms' }}>
-        <img src="https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/qe-logo-2.png" alt="QE" />
+        <img src={settings.intro.logoUrl} alt="QE" />
         <p className="editorial-side-link">
-          <a href="https://qe-mag.com" target="_blank" rel="noreferrer">qe-mag.com</a>
+          <a href={settings.intro.siteUrl} target="_blank" rel="noreferrer">
+            {settings.intro.siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+          </a>
           <img src="https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/arrowtop.png" alt="" className="editorial-side-link-icon" />
         </p>
       </div>
 
       <div className="editorial-content">
         <div className="editorial-intro anim-fade-up" style={{ '--anim-delay': '220ms' }}>
-          <p>
-            <em>QE</em> is a fashion and art platform exploring contemporary culture through AI-based modes of creation.
-            <br /><br />
-            Grounded in humanistic and philosophical inquiry, it approaches technology not as an answer, but as a lens — rethinking authorship, value, and expression.
-          </p>
+          {introBlocks.map((block, index) => (
+            block.type === 'list' ? (
+              <ul className="editorial-points" key={`intro-list-${index}`}>
+                {block.items.map((item, itemIndex) => (
+                  <li key={`${item}-${itemIndex}`}>{renderRichText(item)}</li>
+                ))}
+              </ul>
+            ) : (
+              <p key={`${block.text}-${index}`}>{renderRichText(block.text)}</p>
+            )
+          ))}
         </div>
 
         <div className="editorial-editions anim-fade-up" style={{ '--anim-delay': '320ms' }}>

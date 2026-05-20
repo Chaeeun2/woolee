@@ -1,0 +1,11 @@
+name = "woolee-r2-upload"
+main = "src/index.js"
+compatibility_date = "2026-05-11"
+
+[[r2_buckets]]
+binding = "WOOLEE_BUCKET"
+bucket_name = "woolee"
+
+[vars]
+PUBLIC_R2_BASE_URL = "https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev"
+ALLOWED_ORIGIN = "http://localhost:5173,https://woo-lee.web.app,https://woo-lee.firebaseapp.com"

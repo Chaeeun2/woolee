@@ -1,10 +1,47 @@
 import './CommonPage.css'
-import { COMMON_DETAIL_NAV } from '../data/projectData'
+import { DEFAULT_COMMON_PAGE_SETTINGS, getCommonDetailNav } from '../admin/commonPageSettings'
 
 const MAX_EDITIONS = 3
-const commonLinks = COMMON_DETAIL_NAV.slice(0, MAX_EDITIONS)
 
-function CommonPage({ onNavigate, onOpenEdition }) {
+const renderRichText = (text) => (
+  String(text || '').split(/(\*[^*]+\*)/g).map((part, index) => {
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={`${part}-${index}`}>{part.slice(1, -1)}</em>
+    }
+
+    return part
+  })
+)
+
+const parseIntroBlocks = (body) => {
+  const blocks = []
+
+  String(body || '').split(/\r?\n/).forEach((line) => {
+    const trimmedLine = line.trim()
+    if (!trimmedLine) return
+
+    const listMatch = trimmedLine.match(/^--\s*(.+)$/)
+    if (listMatch) {
+      const lastBlock = blocks[blocks.length - 1]
+      if (lastBlock?.type === 'list') {
+        lastBlock.items.push(listMatch[1])
+        return
+      }
+
+      blocks.push({ type: 'list', items: [listMatch[1]] })
+      return
+    }
+
+    blocks.push({ type: 'paragraph', text: line })
+  })
+
+  return blocks
+}
+
+function CommonPage({ settings = DEFAULT_COMMON_PAGE_SETTINGS, onNavigate, onOpenEdition }) {
+  const commonLinks = getCommonDetailNav(settings).slice(0, MAX_EDITIONS)
+  const introBlocks = parseIntroBlocks(settings.intro.body)
+
   const handleLinkClick = (event, pageId) => {
     event.preventDefault()
     if (onOpenEdition) {
@@ -22,26 +59,28 @@ function CommonPage({ onNavigate, onOpenEdition }) {
   return (
     <section className="editorial-page" aria-label="COM M ON">
       <div className="editorial-mark anim-fade-up" style={{ '--anim-delay': '120ms' }}>
-        <img src="https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/common-logo-2.png" alt="COM M ON" />
+        <img src={settings.intro.logoUrl} alt="COM M ON" />
         <p className="editorial-side-link">
-          <a href="http://common-mag.com" target="_blank" rel="noreferrer">common-mag.com</a>
+          <a href={settings.intro.siteUrl} target="_blank" rel="noreferrer">
+            {settings.intro.siteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+          </a>
           <img src="https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/arrowtop.png" alt="" className="editorial-side-link-icon" />
         </p>
       </div>
 
       <div className="editorial-content">
         <div className="editorial-intro anim-fade-up" style={{ '--anim-delay': '220ms' }}>
-          <p>
-            <em>COM M ON</em> is an editorial platform shaped by:
-          </p>
-          <ul className="editorial-points">
-            <li>Contemporary Vision</li>
-            <li>Conceptual Imagination</li>
-            <li>Courageous Provocation</li>
-          </ul>
-          <p>
-            <br/>Rooted in <em>musicians</em> and <em>fashion</em> as cultural language.
-          </p>
+          {introBlocks.map((block, index) => (
+            block.type === 'list' ? (
+              <ul className="editorial-points" key={`intro-list-${index}`}>
+                {block.items.map((item, itemIndex) => (
+                  <li key={`${item}-${itemIndex}`}>{renderRichText(item)}</li>
+                ))}
+              </ul>
+            ) : (
+              <p key={`${block.text}-${index}`}>{renderRichText(block.text)}</p>
+            )
+          ))}
         </div>
 
         <div className="editorial-editions anim-fade-up" style={{ '--anim-delay': '320ms' }}>

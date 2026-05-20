@@ -1,0 +1,117 @@
+.admin-upload-action {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.admin-upload-caption {
+  max-width: 100%;
+}
+
+.admin-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 25px;
+}
+
+.admin-upload-row {
+  padding: 16px;
+  border-radius: 12px;
+  background: #f2f2f2;
+}
+
+.admin-upload-row.logoUrl {
+  grid-column: 1 / -1;
+}
+
+.admin-upload-info {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-upload-info > div:first-child {
+  display: grid;
+  gap: 5px;
+}
+
+.admin-upload-row strong {
+  font-size: 18px;
+  font-weight: 750;
+}
+
+.admin-inline-caption {
+  margin-left: 10px;
+  color: #777;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.admin-upload-row span {
+  color: #666;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.admin-media-preview {
+  overflow: hidden;
+  width: 100%;
+  border-radius: 10px;
+}
+
+.admin-media-preview.video {
+  aspect-ratio: 16 / 9;
+}
+
+.admin-media-preview.image {
+  display: grid;
+  place-items: center;
+  min-height: 120px;
+}
+
+.admin-media-preview video,
+.admin-media-preview img {
+  display: block;
+  width: 100%;
+}
+
+.admin-media-preview video {
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin-media-preview img {
+  object-fit: contain;
+}
+
+.admin-upload-row.logoUrl .admin-media-preview {
+  max-width: 400px;
+}
+
+.admin-card-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 20px;
+}
+
+.admin-card-menu button {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 14px;
+  background: #efefef;
+  color: #000;
+  font-size: 18px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.admin-card-menu button.active,
+.admin-card-menu button:hover {
+  background: #000;
+  color: #fff;
+}

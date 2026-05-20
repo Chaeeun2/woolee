@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import './Header.css'
 
 const menuItems = [
@@ -19,22 +19,25 @@ function Header({
   brandTargetPage = 'home',
   brandTargetPath = null,
   brandClassName = '',
+  instagramUrl = '',
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [closing, setClosing] = useState(false)
+  const mobileOpenRef = useRef(false)
 
-  const closeMenu = () => {
-    if (!mobileOpen) return
+  const closeMenu = useCallback(() => {
+    if (!mobileOpenRef.current) return
+    mobileOpenRef.current = false
     setClosing(true)
     setTimeout(() => {
       setMobileOpen(false)
       setClosing(false)
     }, 280)
-  }
+  }, [])
 
   useEffect(() => {
-    if (mobileOpen) closeMenu()
-  }, [activePage])
+    queueMicrotask(closeMenu)
+  }, [activePage, closeMenu])
 
   const handleMenuClick = (event, pageId) => {
     event.preventDefault()
@@ -56,6 +59,7 @@ function Header({
     if (mobileOpen) {
       closeMenu()
     } else {
+      mobileOpenRef.current = true
       setMobileOpen(true)
     }
   }
@@ -107,6 +111,36 @@ function Header({
               </a>
             </li>
           ))}
+          {instagramUrl ? (
+            <li className="desktop-instagram-item">
+              <a
+                className="instagram-link"
+                href={instagramUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2Zm0 2A3.75 3.75 0 0 0 4 7.75v8.5A3.75 3.75 0 0 0 7.75 20h8.5A3.75 3.75 0 0 0 20 16.25v-8.5A3.75 3.75 0 0 0 16.25 4h-8.5ZM12 7.25A4.75 4.75 0 1 1 7.25 12 4.75 4.75 0 0 1 12 7.25Zm0 2A2.75 2.75 0 1 0 14.75 12 2.75 2.75 0 0 0 12 9.25Zm4.95-2.7a1.15 1.15 0 1 1-1.15 1.15 1.15 1.15 0 0 1 1.15-1.15Z" />
+                </svg>
+              </a>
+            </li>
+          ) : null}
+          {instagramUrl ? (
+            <li className="mobile-instagram-item">
+              <a
+                className="mobile-instagram-link"
+                href={instagramUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Instagram"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M7.75 2h8.5A5.76 5.76 0 0 1 22 7.75v8.5A5.76 5.76 0 0 1 16.25 22h-8.5A5.76 5.76 0 0 1 2 16.25v-8.5A5.76 5.76 0 0 1 7.75 2Zm0 2A3.75 3.75 0 0 0 4 7.75v8.5A3.75 3.75 0 0 0 7.75 20h8.5A3.75 3.75 0 0 0 20 16.25v-8.5A3.75 3.75 0 0 0 16.25 4h-8.5ZM12 7.25A4.75 4.75 0 1 1 7.25 12 4.75 4.75 0 0 1 12 7.25Zm0 2A2.75 2.75 0 1 0 14.75 12 2.75 2.75 0 0 0 12 9.25Zm4.95-2.7a1.15 1.15 0 1 1-1.15 1.15 1.15 1.15 0 0 1 1.15-1.15Z" />
+                </svg>
+              </a>
+            </li>
+          ) : null}
         </ul>
       </nav>
     </header>

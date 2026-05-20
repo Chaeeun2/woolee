@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './ConversationPage.css'
-import { CONVERSATION_CONTENT_ITEMS } from '../data/projectData'
+import { DEFAULT_CONVERSATIONS_PAGE_SETTINGS, getConversationContentItems } from '../admin/conversationsPageSettings'
 
 const ARROW_ICON = 'https://pub-698f58114a944b669e4e9ffd980dafb6.r2.dev/arrowtop.png'
-const conversationLinks = CONVERSATION_CONTENT_ITEMS
 const CURSOR_OFFSET = 18
 const MOBILE_MQ = '(max-width: 768px)'
 const MOBILE_PREVIEW_BOX = 210
@@ -36,7 +35,11 @@ function anchorPreviewPosition(anchorEl) {
   return { left, top }
 }
 
-function ConversationListPage({ onOpenContent }) {
+function ConversationListPage({ settings = DEFAULT_CONVERSATIONS_PAGE_SETTINGS, onOpenContent }) {
+  const conversationLinks = useMemo(
+    () => getConversationContentItems(settings),
+    [settings],
+  )
   const isMobileLayout = useMobileLayout()
   const [hoverPreview, setHoverPreview] = useState(null)
   const [touchPreview, setTouchPreview] = useState(null)
@@ -57,12 +60,14 @@ function ConversationListPage({ onOpenContent }) {
     return () => {
       linkEls.forEach((el) => el.remove())
     }
-  }, [])
+  }, [conversationLinks])
 
   useEffect(() => {
     if (!isMobileLayout) {
-      setTouchPreview(null)
-      setTouchImageReady(false)
+      queueMicrotask(() => {
+        setTouchPreview(null)
+        setTouchImageReady(false)
+      })
     }
   }, [isMobileLayout])
 
@@ -70,13 +75,17 @@ function ConversationListPage({ onOpenContent }) {
     const src = touchPreview?.src
     const linkId = touchPreview?.linkId
     if (!src || linkId == null) {
-      setTouchImageReady(false)
+      queueMicrotask(() => {
+        setTouchImageReady(false)
+      })
       touchLoadTargetRef.current = { linkId: null, src: null }
       return
     }
 
     touchLoadTargetRef.current = { linkId, src }
-    setTouchImageReady(false)
+    queueMicrotask(() => {
+      setTouchImageReady(false)
+    })
 
     const img = new Image()
     let cancelled = false

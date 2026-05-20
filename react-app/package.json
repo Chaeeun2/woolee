@@ -10,9 +10,15 @@
     "preview": "vite preview",
     "firebase:login": "firebase login",
     "firebase:deploy": "npm run build && firebase deploy",
-    "firebase:deploy:hosting": "npm run build && firebase deploy --only hosting"
+    "firebase:deploy:hosting": "npm run build && firebase deploy --only hosting",
+    "r2:dev": "npm --prefix workers/r2-upload run dev",
+    "r2:deploy": "npm --prefix workers/r2-upload run deploy"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "firebase": "^12.13.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
