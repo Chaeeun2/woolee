@@ -406,6 +406,8 @@ function App() {
     ...Object.fromEntries(projectsDetailNav.map((item) => [item.pageId, 'projects'])),
     ...Object.fromEntries(commonDetailNav.map((item) => [item.pageId, 'common'])),
     ...Object.fromEntries(qeDetailNav.map((item) => [item.pageId, 'qe'])),
+    'common-editions': 'common',
+    'qe-editions': 'qe',
   }), [commonDetailNav, projectsDetailNav, qeDetailNav])
   const effectiveSectionSideConfig = useMemo(() => ({
     ...SECTION_SIDE_CONFIG,
